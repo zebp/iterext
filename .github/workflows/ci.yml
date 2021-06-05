@@ -1,0 +1,27 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Git Checkout Deno Module
+        uses: actions/checkout@v2
+
+      - name: Setup Deno
+        uses: denolib/setup-deno@v2
+
+      - name: Lint Deno Module
+        run: deno fmt --check
+
+      - name: Build Deno Module
+        run: deno run --reload mod.ts
+
+      - name: Test Deno Module
+        run: deno test --allow-none
