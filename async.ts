@@ -116,30 +116,6 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
   }
 
   /**
-   * Iterates through the entire iterator and collects the items as an array.
-   * @returns all the items in the iterator as an array.
-   */
-  collect(): Promise<T[]> {
-    return this.reduce<T[]>((prev, curr) => [...prev, curr], []);
-  }
-
-  /**
-   * Iterates through the entire iterator reducing all items to one value.
-   * @param func a function executed on each item of the iterator with the previous value supplied.
-   * @param initial the initial value to be passed to the reducer function.
-   * @returns the iterator reduced down to a single value.
-   */
-  async reduce<X>(func: (prev: X, item: T) => X, initial: X): Promise<X> {
-    let result = initial;
-
-    for await (const item of this) {
-      result = func(result, item);
-    }
-
-    return result;
-  }
-
-  /**
    * Chains all provided iterables into one {@link AsyncIter}.
    * @param next iterables to be appended onto the current one.
    * @returns all iterables chained onto the current {@link AsyncIter}.
@@ -187,6 +163,102 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
         ] as [T, T];
       }
     }());
+  }
+
+  /**
+   * Tags every item in the iterator with it's index.
+   * @returns a {@link AsyncIter} with items and their index.
+   */
+  enumerate(): AsyncIter<[number, T]> {
+    const iter = this;
+    return new AsyncIter(async function* () {
+      let index = 0;
+
+      for await (const item of iter) {
+        yield [index++, item] as [number, T];
+      }
+    }());
+  }
+
+  /**
+   * Creates an iterator with only n number of items.
+   * @param limit how many items to limit the iterator to.
+   * @returns a limited {@link AsyncIter}.
+   */
+  take(limit: number): AsyncIter<T> {
+    const iter = this;
+    return new AsyncIter(async function* () {
+      let count = 0;
+
+      for await (const item of iter) {
+        if (++count > limit) break;
+        yield item;
+      }
+    }());
+  }
+
+  /**
+   * Skips n items in the iterator.
+   * @param items the number of items to skip.
+   * @returns a {@link AsyncIter} that skipped n elements.
+   */
+  skip(items: number): AsyncIter<T> {
+    const iter = this;
+    return new AsyncIter(async function* () {
+      let count = 0;
+
+      for await (const item of iter) {
+        if (++count <= items) continue;
+        yield item;
+      }
+    }());
+  }
+
+  /**
+   * Iterates through the entire iterator and collects the items as an array.
+   * @returns all the items in the iterator as an array.
+   */
+  collect(): Promise<T[]> {
+    return this.reduce<T[]>((prev, curr) => [...prev, curr], []);
+  }
+
+  /**
+   * Iterates through the entire iterator reducing all items to one value.
+   * @param func a function executed on each item of the iterator with the previous value supplied.
+   * @param initial the initial value to be passed to the reducer function.
+   * @returns the iterator reduced down to a single value.
+   */
+  async reduce<X>(func: (prev: X, item: T) => X, initial: X): Promise<X> {
+    let result = initial;
+
+    for await (const item of this) {
+      result = func(result, item);
+    }
+
+    return result;
+  }
+
+  /**
+   * @returns the number of items the {@link AsyncIter} will yield.
+   */
+  async count(): Promise<number> {
+    let count = 0;
+
+    for await (const _ of this) {
+      count++;
+    }
+
+    return count;
+  }
+
+  /**
+   * Executes the provided function for every item in the iterator.
+   * @param func a function that accepts items.
+   */
+  async forEach(func: (item: T) => void): Promise<void> {
+    for await (const item of this) {
+      func(item);
+    }
   }
 
   /**

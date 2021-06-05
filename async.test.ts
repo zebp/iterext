@@ -167,3 +167,64 @@ Deno.test({
     ]);
   },
 });
+
+Deno.test({
+  name: "enumerate iter",
+  async fn() {
+    const enumerated = new AsyncIter(sequentialIntegers(1, 5)).enumerate();
+
+    assertEquals(await enumerated.collect(), [
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [3, 4],
+      [4, 5],
+    ]);
+  },
+});
+
+Deno.test({
+  name: "take iter",
+  async fn() {
+    const firstTwenty = await new AsyncIter(sequentialIntegers(1, Infinity))
+      .take(20).collect();
+
+    assertEquals(firstTwenty.length, 20);
+  },
+});
+
+Deno.test({
+  name: "skip iter",
+  async fn() {
+    const after5 = await new AsyncIter(sequentialIntegers(1, 10))
+      .skip(5).collect();
+
+    assertEquals(after5, [6, 7, 8, 9, 10]);
+  },
+});
+
+Deno.test({
+  name: "count iter",
+  async fn() {
+    assertEquals(
+      await new AsyncIter(sequentialIntegers(1, 10))
+        .count(),
+      10,
+    );
+  },
+});
+
+Deno.test({
+  name: "forEach iter",
+  async fn() {
+    let callCount = 0;
+
+    await new AsyncIter(sequentialIntegers(1, 10))
+      .forEach(() => callCount++);
+
+    assertEquals(
+      callCount,
+      10,
+    );
+  },
+});
