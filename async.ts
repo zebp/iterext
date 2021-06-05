@@ -15,13 +15,11 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
    * @returns a {@link AsyncIter} where all elements have passed the predicate.
    */
   filter(predicate: (item: T) => Promise<boolean>): AsyncIter<T> {
-    const iter = this;
-
-    return new AsyncIter(async function* () {
+    return new AsyncIter(async function* (iter: AsyncIter<T>) {
       for await (const item of iter) {
         if (await predicate(item)) yield item;
       }
-    }());
+    }(this));
   }
 
   /**
@@ -30,13 +28,11 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
    * @returns a {@link AsyncIter} where all elements have passed the predicate.
    */
   filterSync(predicate: (item: T) => boolean): AsyncIter<T> {
-    const iter = this;
-
-    return new AsyncIter(async function* () {
+    return new AsyncIter(async function* (iter: AsyncIter<T>) {
       for await (const item of iter) {
         if (predicate(item)) yield item;
       }
-    }());
+    }(this));
   }
 
   /**
@@ -49,14 +45,12 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
   filterMap<Output>(
     func: (item: T) => Promise<Output | undefined>,
   ): AsyncIter<Output> {
-    const iter = this;
-
-    return new AsyncIter(async function* () {
+    return new AsyncIter(async function* (iter: AsyncIter<T>) {
       for await (const item of iter) {
         const mapped = await func(item);
         if (mapped !== undefined) yield mapped;
       }
-    }());
+    }(this));
   }
 
   /**
@@ -69,14 +63,12 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
   filterMapSync<Output>(
     func: (item: T) => Output | undefined,
   ): AsyncIter<Output> {
-    const iter = this;
-
-    return new AsyncIter(async function* () {
+    return new AsyncIter(async function* (iter: AsyncIter<T>) {
       for await (const item of iter) {
         const mapped = func(item);
         if (mapped !== undefined) yield mapped;
       }
-    }());
+    }(this));
   }
 
   /**
@@ -88,13 +80,11 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
   map<Output>(
     func: (item: T) => Promise<Output>,
   ): AsyncIter<Output> {
-    const iter = this;
-
-    return new AsyncIter(async function* () {
+    return new AsyncIter(async function* (iter: AsyncIter<T>) {
       for await (const item of iter) {
         yield await func(item);
       }
-    }());
+    }(this));
   }
 
   /**
@@ -106,13 +96,11 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
   mapSync<Output>(
     func: (item: T) => Output,
   ): AsyncIter<Output> {
-    const iter = this;
-
-    return new AsyncIter(async function* () {
+    return new AsyncIter(async function* (iter: AsyncIter<T>) {
       for await (const item of iter) {
         yield func(item);
       }
-    }());
+    }(this));
   }
 
   /**
@@ -121,14 +109,13 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
    * @returns all iterables chained onto the current {@link AsyncIter}.
    */
   chain(...next: AsyncIterable<T>[]): AsyncIter<T> {
-    const iter = this;
-    return new AsyncIter(async function* () {
+    return new AsyncIter(async function* (iter: AsyncIter<T>) {
       yield* iter;
 
       for (const nextIterator of next) {
         yield* nextIterator;
       }
-    }());
+    }(this));
   }
 
   /**
@@ -139,10 +126,9 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
    * @returns a zipped {@link AsyncIter}
    */
   zip(right: AsyncIterable<T>): AsyncIter<[T, T]> {
-    const iter = this;
     const rightIter = right[Symbol.asyncIterator]();
 
-    return new AsyncIter(async function* () {
+    return new AsyncIter(async function* (iter: AsyncIter<T>) {
       let done = false;
 
       while (!done) {
@@ -162,7 +148,7 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
           rightResult.value,
         ] as [T, T];
       }
-    }());
+    }(this));
   }
 
   /**
@@ -170,14 +156,13 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
    * @returns a {@link AsyncIter} with items and their index.
    */
   enumerate(): AsyncIter<[number, T]> {
-    const iter = this;
-    return new AsyncIter(async function* () {
+    return new AsyncIter(async function* (iter: AsyncIter<T>) {
       let index = 0;
 
       for await (const item of iter) {
         yield [index++, item] as [number, T];
       }
-    }());
+    }(this));
   }
 
   /**
@@ -186,15 +171,14 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
    * @returns a limited {@link AsyncIter}.
    */
   take(limit: number): AsyncIter<T> {
-    const iter = this;
-    return new AsyncIter(async function* () {
+    return new AsyncIter(async function* (iter: AsyncIter<T>) {
       let count = 0;
 
       for await (const item of iter) {
         if (++count > limit) break;
         yield item;
       }
-    }());
+    }(this));
   }
 
   /**
@@ -203,15 +187,14 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
    * @returns a {@link AsyncIter} that skipped n elements.
    */
   skip(items: number): AsyncIter<T> {
-    const iter = this;
-    return new AsyncIter(async function* () {
+    return new AsyncIter(async function* (iter: AsyncIter<T>) {
       let count = 0;
 
       for await (const item of iter) {
         if (++count <= items) continue;
         yield item;
       }
-    }());
+    }(this));
   }
 
   /**
@@ -271,7 +254,7 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
   /**
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/asyncIterator
    */
-  [Symbol.asyncIterator](): AsyncIterator<T, any, undefined> {
+  [Symbol.asyncIterator](): AsyncIterator<T, unknown, undefined> {
     return this;
   }
 }

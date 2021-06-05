@@ -1,10 +1,7 @@
-import {
-  assertEquals,
-  assertMatch,
-} from "https://deno.land/std@0.97.0/testing/asserts.ts";
+import { assertEquals } from "https://deno.land/std@0.97.0/testing/asserts.ts";
 import { AsyncIter } from "./async.ts";
 
-async function* sequentialIntegers(start: number = 1, end: number = 10) {
+async function* sequentialIntegers(start = 1, end = 10) {
   for (let i = start; i <= end; i++) {
     yield i;
   }
@@ -62,9 +59,7 @@ Deno.test({
   name: "filter iter",
   async fn() {
     const evenNumbers = await new AsyncIter(sequentialIntegers(1, 10)).filter(
-      async (
-        x,
-      ) => x % 2 == 0,
+      (x) => Promise.resolve(x % 2 == 0),
     ).collect();
 
     assertEquals(evenNumbers, [2, 4, 6, 8, 10]);
@@ -75,9 +70,7 @@ Deno.test({
   name: "filterSync iter",
   async fn() {
     const evenNumbers = await new AsyncIter(sequentialIntegers(1, 10))
-      .filterSync((
-        x,
-      ) => x % 2 == 0).collect();
+      .filterSync((x) => x % 2 == 0).collect();
 
     assertEquals(evenNumbers, [2, 4, 6, 8, 10]);
   },
@@ -87,9 +80,7 @@ Deno.test({
   name: "map iter",
   async fn() {
     const result = await new AsyncIter(sequentialIntegers(1, 10)).map(
-      async (
-        x,
-      ) => x * 2,
+      (x) => Promise.resolve(x * 2),
     ).collect();
 
     assertEquals(result, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
@@ -99,9 +90,9 @@ Deno.test({
 Deno.test({
   name: "mapSync iter",
   async fn() {
-    const result = await new AsyncIter(sequentialIntegers(1, 10)).mapSync((
-      x,
-    ) => x * 2).collect();
+    const result = await new AsyncIter(sequentialIntegers(1, 10)).mapSync((x) =>
+      x * 2
+    ).collect();
 
     assertEquals(result, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
   },
@@ -112,11 +103,7 @@ Deno.test({
   async fn() {
     const result = await new AsyncIter(sequentialIntegers(1, 10))
       .filterMap(
-        async (
-          x,
-        ) => {
-          return x % 2 == 0 ? undefined : x * 2;
-        },
+        (x) => Promise.resolve(x % 2 == 0 ? undefined : x * 2),
       ).collect();
 
     assertEquals(result, [2, 6, 10, 14, 18]);
@@ -128,11 +115,7 @@ Deno.test({
   async fn() {
     const result = await new AsyncIter(sequentialIntegers(1, 10))
       .filterMapSync(
-        (
-          x,
-        ) => {
-          return x % 2 == 0 ? undefined : x * 2;
-        },
+        (x) => x % 2 == 0 ? undefined : x * 2,
       ).collect();
 
     assertEquals(result, [2, 6, 10, 14, 18]);

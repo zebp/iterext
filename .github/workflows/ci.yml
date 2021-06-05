@@ -17,8 +17,11 @@ jobs:
       - name: Setup Deno
         uses: denolib/setup-deno@v2
 
-      - name: Lint Deno Module
+      - name: Check formatting of Deno Module
         run: deno fmt --check
+
+      - name: Lint Deno Module
+        run: deno lint
 
       - name: Build Deno Module
         run: deno run --reload mod.ts
