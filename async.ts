@@ -140,6 +140,56 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
   }
 
   /**
+   * Chains all provided iterables into one {@link AsyncIter}.
+   * @param next iterables to be appended onto the current one.
+   * @returns all iterables chained onto the current {@link AsyncIter}.
+   */
+  chain(...next: AsyncIterable<T>[]): AsyncIter<T> {
+    const iter = this;
+    return new AsyncIter(async function* () {
+      yield* iter;
+
+      for (const nextIterator of next) {
+        yield* nextIterator;
+      }
+    }());
+  }
+
+  /**
+   * Combines the result of both iterators into one {@link AsyncIter} with items of tuples from the
+   * left and right iterator.
+   * @param right the iterator to be zipped and have it's values on the right of the resulting
+   * iterator.
+   * @returns a zipped {@link AsyncIter}
+   */
+  zip(right: AsyncIterable<T>): AsyncIter<[T, T]> {
+    const iter = this;
+    const rightIter = right[Symbol.asyncIterator]();
+
+    return new AsyncIter(async function* () {
+      let done = false;
+
+      while (!done) {
+        const [leftResult, rightResult] = await Promise.all([
+          iter.next(),
+          rightIter.next(),
+        ]);
+
+        // According to MDN docs done is always present, so we'll just fallback to true.
+        done ||= leftResult.done ?? true;
+        done ||= rightResult.done ?? true;
+
+        if (done) break;
+
+        yield [
+          leftResult.value,
+          rightResult.value,
+        ] as [T, T];
+      }
+    }());
+  }
+
+  /**
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/asyncIterator
    */
   next(): Promise<IteratorResult<T>> {

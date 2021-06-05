@@ -138,3 +138,32 @@ Deno.test({
     assertEquals(result, [2, 6, 10, 14, 18]);
   },
 });
+
+Deno.test({
+  name: "chain iter",
+  async fn() {
+    const chained = new AsyncIter(sequentialIntegers(1, 5)).chain(
+      sequentialIntegers(6, 8),
+      sequentialIntegers(9, 10),
+    );
+
+    assertEquals(await chained.collect(), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  },
+});
+
+Deno.test({
+  name: "zip iter",
+  async fn() {
+    const zipped = new AsyncIter(sequentialIntegers(1, 5)).zip(
+      sequentialIntegers(6, 10),
+    );
+
+    assertEquals(await zipped.collect(), [
+      [1, 6],
+      [2, 7],
+      [3, 8],
+      [4, 9],
+      [5, 10],
+    ]);
+  },
+});
