@@ -18,7 +18,7 @@ jobs:
         uses: denolib/setup-deno@v2
 
       - name: Check formatting of Deno Module
-        run: deno fmt --check
+        run: deno fmt  --check *.ts
 
       - name: Lint Deno Module
         run: deno lint
@@ -28,3 +28,6 @@ jobs:
 
       - name: Test Deno Module
         run: deno test --allow-none
+
+      - name: Ensure Node build
+        run: npm run build
