@@ -10,6 +10,32 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
   }
 
   /**
+   * Converts a synchronous iterable into an {@link AsyncIter}.
+   * @param iterable a synchronous iterable.
+   * @returns a {@link AsyncIter} from the provided synchronous iterable.
+   */
+  static fromIterable<T>(iterable: Iterable<T>): AsyncIter<T> {
+    return new AsyncIter(async function* () {
+      yield* iterable;
+    }());
+  }
+
+  /**
+   * Creates a never ending iterator with values from the provided function's output.
+   * @param func a function responsible for populating the string.
+   * @returns a never ending {@link AsyncIter}.
+   */
+  static repeatWith<T>(func: (index: number) => Promise<T>): AsyncIter<T> {
+    return new AsyncIter(async function* () {
+      let index = 0;
+
+      while (true) {
+        yield await func(index++);
+      }
+    }());
+  }
+
+  /**
    * Filters elements that pass through the iterator.
    * @param predicate if the item should be included in the resulting iterator.
    * @returns a {@link AsyncIter} where all elements have passed the predicate.
@@ -242,6 +268,39 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
     for await (const item of this) {
       func(item);
     }
+  }
+
+  /**
+   * Executes the provided function for every item in the iterator concurrently with an optional
+   * concurrency limit.
+   * @param func an async function that accepts items.
+   * @param limit how many promises can be processed concurrently.
+   */
+  async forEachConcurrent(
+    func: (item: T) => Promise<void>,
+    limit?: number,
+  ): Promise<void> {
+    const items = await this.collect();
+
+    // Process all our items if no limit was specified or we can fit all of our items within the
+    // limit.
+    if (limit === undefined || limit >= items.length) {
+      await Promise.all(items.map(func));
+      return;
+    }
+
+    // Takes an item off the front of the items list and awaits it then repeats until items is
+    // empty.
+    async function process() {
+      while (true) {
+        const item = items.shift();
+        if (item === undefined) return;
+        await func(item);
+      }
+    }
+
+    const processors = [...new Array(limit)].map(process);
+    await Promise.all(processors);
   }
 
   /**
