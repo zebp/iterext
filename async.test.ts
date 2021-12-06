@@ -37,7 +37,8 @@ Deno.test({
 Deno.test({
   name: "flat iter",
   async fn() {
-    const items = await AsyncIter.repeatWith(async () => [1, 2]).take(2).flat().collect();
+    const items = await AsyncIter.repeatWith(async () => [1, 2]).take(2).flat()
+      .collect();
     assertEquals(items, [1, 2, 1, 2]);
   },
 });

@@ -1,4 +1,7 @@
-import { assertEquals, assert } from "https://deno.land/std@0.97.0/testing/asserts.ts";
+import {
+  assert,
+  assertEquals,
+} from "https://deno.land/std@0.97.0/testing/asserts.ts";
 import { Iter } from "./sync.ts";
 
 function* sequentialIntegers(start = 1, end = 10) {
