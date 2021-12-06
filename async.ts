@@ -224,6 +224,20 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
   }
 
   /**
+   * Flattens the iterator of elements by one level.
+   * @returns a {@link Iter} that yields all items in arrays yielded by the iterator.
+   */
+  flat<A extends Array<E>, E>(
+    this: AsyncIter<A>,
+  ): AsyncIter<A extends (infer U)[] ? U : never> {
+    return new AsyncIter(async function* (iter: AsyncIter<A>) {
+      for await (const item of iter) {
+        yield* item as unknown as any;
+      }
+    }(this));
+  }
+
+  /**
    * Iterates through the entire iterator and collects the items as an array.
    * @returns all the items in the iterator as an array.
    */

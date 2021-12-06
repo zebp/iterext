@@ -1,4 +1,4 @@
-import { assertEquals } from "https://deno.land/std@0.97.0/testing/asserts.ts";
+import { assertEquals, assert } from "https://deno.land/std@0.97.0/testing/asserts.ts";
 import { Iter } from "./sync.ts";
 
 function* sequentialIntegers(start = 1, end = 10) {
@@ -31,6 +31,15 @@ Deno.test({
       assertEquals(item, 1);
       break;
     }
+  },
+});
+
+Deno.test({
+  name: "flat iter",
+  fn() {
+    const items = Iter.repeatWith(() => [1, 2]).take(2).flat().collect();
+
+    assertEquals(items, [1, 2, 1, 2]);
   },
 });
 

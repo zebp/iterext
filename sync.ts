@@ -161,6 +161,20 @@ export class Iter<T> implements Iterator<T>, Iterable<T> {
   }
 
   /**
+   * Flattens the iterator of elements by one level.
+   * @returns a {@link Iter} that yields all items in arrays yielded by the iterator.
+   */
+  flat<A extends Array<E>, E>(
+    this: Iter<A>,
+  ): Iter<A extends (infer U)[] ? U : never> {
+    return new Iter(function* (iter: Iter<A>) {
+      for (const item of iter) {
+        yield* item as unknown as any;
+      }
+    }(this));
+  }
+
+  /**
    * Iterates through the entire iterator and collects the items as an array.
    * @returns all the items in the iterator as an array.
    */
