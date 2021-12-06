@@ -151,7 +151,7 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
    * iterator.
    * @returns a zipped {@link AsyncIter}
    */
-  zip(right: AsyncIterable<T>): AsyncIter<[T, T]> {
+  zip<R>(right: AsyncIterable<R>): AsyncIter<[T, R]> {
     const rightIter = right[Symbol.asyncIterator]();
 
     return new AsyncIter(async function* (iter: AsyncIter<T>) {
@@ -172,7 +172,7 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
         yield [
           leftResult.value,
           rightResult.value,
-        ] as [T, T];
+        ] as [T, R];
       }
     }(this));
   }

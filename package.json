@@ -1,6 +1,6 @@
 {
   "name": "iterext",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Ports of Rust's Iterator and future-rs' StreamExt",
   "main": "dist/mod.js",
   "types": "dist/mod.d.ts",

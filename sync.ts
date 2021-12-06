@@ -88,7 +88,7 @@ export class Iter<T> implements Iterator<T>, Iterable<T> {
    * iterator.
    * @returns a zipped {@link Iter}
    */
-  zip(right: Iterable<T>): Iter<[T, T]> {
+  zip<R>(right: Iterable<R>): Iter<[T, R]> {
     const rightIter = right[Symbol.iterator]();
 
     return new Iter(function* (iter: Iter<T>) {
@@ -109,7 +109,7 @@ export class Iter<T> implements Iterator<T>, Iterable<T> {
         yield [
           leftResult.value,
           rightResult.value,
-        ] as [T, T];
+        ] as [T, R];
       }
     }(this));
   }
