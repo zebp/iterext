@@ -232,6 +232,7 @@ export class AsyncIter<T> implements AsyncIterator<T>, AsyncIterable<T> {
   ): AsyncIter<A extends (infer U)[] ? U : never> {
     return new AsyncIter(async function* (iter: AsyncIter<A>) {
       for await (const item of iter) {
+        // deno-lint-ignore no-explicit-any
         yield* item as unknown as any;
       }
     }(this));

@@ -169,6 +169,7 @@ export class Iter<T> implements Iterator<T>, Iterable<T> {
   ): Iter<A extends (infer U)[] ? U : never> {
     return new Iter(function* (iter: Iter<A>) {
       for (const item of iter) {
+        // deno-lint-ignore no-explicit-any
         yield* item as unknown as any;
       }
     }(this));
